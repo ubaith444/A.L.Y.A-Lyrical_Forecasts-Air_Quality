@@ -156,6 +156,16 @@
           </div>
         </div>
 
+        <nav class="topbar-ops-nav" aria-label="Operations Navigation Tabs">
+          <button class="topbar-ops-tab active" data-nav-target="overview">Dashboard</button>
+          <button class="topbar-ops-tab" data-nav-target="mapSection">Tamil Nadu Map</button>
+          <button class="topbar-ops-tab" data-nav-target="sectors">Operations Impact</button>
+          <button class="topbar-ops-tab" data-nav-target="guidance">Atmospheric Guidance</button>
+          <button class="topbar-ops-tab" data-nav-target="alertHistorySection">Alert History</button>
+          <button class="topbar-ops-tab" data-nav-target="auditHistorySection">Audit Trail</button>
+          <a href="/data-sources" class="topbar-ops-tab">Data Sources &rarr;</a>
+        </nav>
+
         <div class="topbar-right">
           <!-- District Selector Dropdown -->
           <div class="district-selector-topbar">
@@ -179,8 +189,9 @@
       <!-- Main Dashboard Canvas -->
       <main class="dashboard-canvas">
 
-        <!-- 1. Overview Header Card -->
-        <section class="saas-card overview-header-card" id="overview">
+        <!-- 1. Weather Operations Overview Tab -->
+        <div class="dashboard-section active-section" id="overview">
+        <section class="saas-card overview-header-card card-gradient-weather">
           <div class="overview-header-top">
             <div>
               <h1 class="overview-main-title">Tamil Nadu Weather Overview</h1>
@@ -380,8 +391,141 @@
           </div>
         </section>
 
+        <!-- Operations Split Row 1: Weather Risks & Alerts Preview + Quick Map Access -->
+        <div class="ops-split-row">
+          <!-- Left: Heuristic Risk Notifications Preview -->
+          <div class="saas-card ops-panel-controlled-height card-gradient-amber">
+            <div class="card-header-clean" style="margin-bottom: 12px;">
+              <div class="card-title-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 class="card-title" style="font-size: 0.95rem;">Weather Risk Notifications</h3>
+                  <span class="badge-saas badge-critical" id="opsAlertsCountBadge">0 Active</span>
+                </div>
+                <span class="card-subtitle">Concise heuristic alerts calculated from live meteorological provider responses</span>
+              </div>
+              <button class="btn-saas btn-saas-secondary btn-saas-sm" data-nav-target="alertHistorySection" title="Open complete alert history">
+                <span>View More &rarr;</span>
+              </button>
+            </div>
+
+            <div class="ops-panel-scrollable" id="opsActiveAlertsList">
+              <div style="padding: 24px; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+                Evaluating real-time weather risk triggers...
+              </div>
+            </div>
+
+            <div style="padding-top: 10px; border-top: 1px solid var(--color-border); font-size: 0.74rem; color: var(--color-text-muted); display: flex; justify-content: space-between;">
+              <span>Heuristic rules: Heat, Heavy Rain, Gusts, Dry Spells</span>
+              <span>SQLite Persisted</span>
+            </div>
+          </div>
+
+          <!-- Right: Compact Tamil Nadu Weather Radar / Spatial Map Launcher -->
+          <div class="saas-card ops-panel-controlled-height card-gradient-weather">
+            <div class="card-header-clean" style="margin-bottom: 12px;">
+              <div class="card-title-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 class="card-title" style="font-size: 0.95rem;">Tamil Nadu Weather Analysis Map</h3>
+                  <span class="badge-saas badge-normal">15 Stations</span>
+                </div>
+                <span class="card-subtitle">Multi-layer OpenStreetMap: Temperature, Rainfall, Wind, Humidity, Rain-Probability</span>
+              </div>
+              <button class="btn-saas btn-saas-primary btn-saas-sm" data-nav-target="mapSection">
+                <span>Open Interactive Map &rarr;</span>
+              </button>
+            </div>
+
+            <div class="ops-panel-scrollable" style="display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+              <div style="background: var(--color-surface-muted); padding: 14px; border-radius: var(--radius-sm); border: 1px solid var(--color-border);">
+                <div style="font-size: 0.82rem; font-weight: 600; color: var(--color-text); margin-bottom: 6px;">Selectable Meteorological Layers:</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                  <button class="meta-pill" style="cursor: pointer;" data-nav-target="mapSection" data-set-map-var="temperature">Temperature (°C)</button>
+                  <button class="meta-pill" style="cursor: pointer;" data-nav-target="mapSection" data-set-map-var="rainfall">Rainfall (mm)</button>
+                  <button class="meta-pill" style="cursor: pointer;" data-nav-target="mapSection" data-set-map-var="humidity">Humidity (%)</button>
+                  <button class="meta-pill" style="cursor: pointer;" data-nav-target="mapSection" data-set-map-var="wind">Wind (km/h)</button>
+                  <button class="meta-pill" style="cursor: pointer;" data-nav-target="mapSection" data-set-map-var="rain_probability">Rain Probability (%)</button>
+                </div>
+              </div>
+
+              <div style="padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: var(--radius-sm); font-size: 0.78rem; line-height: 1.5; color: #166534;">
+                <strong>Representative City-Centre Telemetry:</strong> Actual station readings from Chennai, Cuddalore, Nagapattinam, Thoothukudi, Coimbatore, Erode, Tiruppur, Nilgiris, Madurai, Tirunelveli, Kanniyakumari, Ramanathapuram, Thanjavur, Tiruchirappalli, Salem.
+              </div>
+
+              <div style="font-size: 0.78rem; color: var(--color-text-secondary); line-height: 1.45;">
+                Explore spatial gradients, mountain barriers, and coastal moisture convergence across Tamil Nadu in the dedicated map console.
+              </div>
+            </div>
+
+            <div style="padding-top: 10px; border-top: 1px solid var(--color-border); font-size: 0.74rem; color: var(--color-text-muted);">
+              Points are representative city centres, not district-wide averages.
+            </div>
+          </div>
+        </div>
+
+        <!-- Operations Split Row 2: Four Sector Summaries + 5-Item Audit Trail Preview -->
+        <div class="ops-split-row">
+          <!-- Left: 4 Key Sector Summaries -->
+          <div class="saas-card ops-panel-controlled-height card-gradient-weather">
+            <div class="card-header-clean" style="margin-bottom: 12px;">
+              <div class="card-title-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 class="card-title" style="font-size: 0.95rem;">Operations Impact Summaries</h3>
+                  <span class="badge-saas badge-normal">4 Key Sectors</span>
+                </div>
+                <span class="card-subtitle">Transparent composite scores decomposed into Hazard (H), Exposure (E), Vulnerability (V)</span>
+              </div>
+              <button class="btn-saas btn-saas-secondary btn-saas-sm" data-nav-target="sectors" title="Open complete 7-sector impact matrix">
+                <span>View Full Matrix &rarr;</span>
+              </button>
+            </div>
+
+            <div class="ops-panel-scrollable">
+              <div class="ops-four-sectors-grid" id="opsFourSectorsGrid">
+                <!-- Dynamically populated via JS -->
+                <div style="padding: 20px; text-align: center; color: var(--color-text-muted); font-size: 0.84rem; grid-column: span 2;">
+                  Loading sector-impact assessments...
+                </div>
+              </div>
+            </div>
+
+            <div style="padding-top: 10px; border-top: 1px solid var(--color-border); font-size: 0.74rem; color: var(--color-text-muted); display: flex; justify-content: space-between;">
+              <span>Sectors: Agriculture, Transport, Urban Infra, Water Resources</span>
+              <a href="#" data-nav-target="sectors" style="color: var(--color-primary); text-decoration: none; font-weight: 600;">7 Sectors Detailed &rarr;</a>
+            </div>
+          </div>
+
+          <!-- Right: 5-Item Audit Trail Preview -->
+          <div class="saas-card ops-panel-controlled-height">
+            <div class="card-header-clean" style="margin-bottom: 12px;">
+              <div class="card-title-group">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <h3 class="card-title" style="font-size: 0.95rem;">System &amp; Settings Audit Trail</h3>
+                  <span class="badge-saas badge-normal font-mono" style="font-size: 0.72rem;">SQLite Persisted</span>
+                </div>
+                <span class="card-subtitle">Five most recent configuration changes and alert acknowledgements</span>
+              </div>
+              <button class="btn-saas btn-saas-secondary btn-saas-sm" data-nav-target="auditHistorySection" title="Open complete audit log">
+                <span>View More &rarr;</span>
+              </button>
+            </div>
+
+            <div class="ops-panel-scrollable" id="opsAuditPreviewList">
+              <div style="padding: 24px; text-align: center; color: var(--color-text-muted); font-size: 0.85rem;">
+                Loading audit trail entries...
+              </div>
+            </div>
+
+            <div style="padding-top: 10px; border-top: 1px solid var(--color-border); font-size: 0.74rem; color: var(--color-text-muted); display: flex; justify-content: space-between;">
+              <span>Logs: Threshold changes, data toggles, acknowledgements</span>
+              <a href="#" data-nav-target="auditHistorySection" style="color: var(--color-primary); text-decoration: none; font-weight: 600;">Full Audit Page &rarr;</a>
+            </div>
+          </div>
+        </div>
+
+        </div>
+
         <!-- 4. Module 1: Computed Meteorological Guidance & Atmospheric Context -->
-        <section class="saas-card" id="guidance">
+        <section class="dashboard-section saas-card" id="guidance">
           <div class="card-header-clean">
             <div class="card-title-group">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -607,7 +751,7 @@
         </section>
 
         <!-- 5. Hourly Forecast Section -->
-        <section class="saas-card" id="forecast">
+        <section class="dashboard-section saas-card" id="forecast">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">Hourly Forecast Trajectory (24–48 Hours)</h2>
@@ -650,7 +794,7 @@
         </section>
 
         <!-- 6. Interactive Tamil Nadu District Map -->
-        <section class="saas-card" id="mapSection">
+        <section class="dashboard-section saas-card" id="mapSection">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">Tamil Nadu District Climatological Map</h2>
@@ -664,6 +808,7 @@
                 <button class="segmented-btn" data-variable="rainfall">Rainfall (mm)</button>
                 <button class="segmented-btn" data-variable="humidity">Humidity (%)</button>
                 <button class="segmented-btn" data-variable="wind">Wind (km/h)</button>
+                <button class="segmented-btn" data-variable="rain_probability">Rain Probability (%)</button>
               </div>
 
               <!-- Layer Toggles -->
@@ -753,6 +898,16 @@
               District-center meteorological metrics are compiled from verified Automatic Weather Stations (AWS) and Numerical Weather Prediction (NWP) centroids. Point measurements represent designated monitoring locations and do not imply uniform weather across vast orographic gradients (such as the Nilgiris Ghat slopes vs. the Erode leeward plains).
             </div>
           </div>
+        
+          <!-- Map Data Integrity & Scientific Limitation Banner -->
+          <div class="official-disclaimer-bar" style="margin-top: 14px; background: var(--color-surface-muted); padding: 12px 16px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); display: flex; gap: 10px; align-items: flex-start;">
+            <svg class="disclaimer-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" width="18" height="18" style="flex-shrink: 0; margin-top: 2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <div style="font-size: 0.8rem; line-height: 1.5; color: var(--color-text-secondary);">
+              <strong>Data Integrity Notice:</strong> The map uses actual provider responses for the 15 configured locations. These are representative city-centre points, not district-wide averages. No synthetic sample weather values or seeded alert records are used.<br>
+              <strong>Scientific Limitation:</strong> Notifications are heuristic indicators, not official meteorological warnings. The map is geographically interactive, but it does not yet display actual district-boundary polygons.
+            </div>
+          </div>
+
         </section>
 
         <!-- 7. Daily Forecast Dashboard -->
@@ -795,7 +950,7 @@
         </section>
 
         <!-- 8. District Intelligence and Comparison -->
-        <section class="saas-card" id="districts">
+        <section class="dashboard-section saas-card" id="districts">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">District Intelligence &amp; Multi-Location Comparison</h2>
@@ -871,7 +1026,7 @@
         </section>
 
         <!-- 9. Phase 3: Climate Analytics Dashboard Suite -->
-        <section class="saas-card" id="climate">
+        <section class="dashboard-section saas-card" id="climate">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">Phase 3: Climate Intelligence &amp; Analytics Suite</h2>
@@ -1241,7 +1396,7 @@
         </section>
 
         <!-- 10. Module 2: Multi-Sector Operational Impact Matrix -->
-        <section class="saas-card" id="sectors">
+        <section class="dashboard-section saas-card" id="sectors">
           <div class="card-header-clean">
             <div class="card-title-group">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -1322,7 +1477,7 @@
         </section>
 
         <!-- 11. Phase 4 — AI Models & Leakage-Free Forecast Evaluation Suite -->
-        <section class="saas-card" id="models">
+        <section class="dashboard-section saas-card" id="models">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">AI Forecasting &amp; Leakage-Free Evaluation Suite</h2>
@@ -1559,7 +1714,7 @@
         </section>
 
         <!-- 12. Phase 5 — Risk Intelligence & Early Warning Hub -->
-        <section class="saas-card" id="heatrisk">
+        <section class="dashboard-section saas-card" id="heatrisk">
           <div class="card-header-clean">
             <div class="card-title-group">
               <h2 class="card-title">Meteorological Risk Intelligence &amp; Early Warning Hub</h2>
@@ -1759,7 +1914,7 @@
         </section>
 
         <!-- 13. Module 3: Settings & Meteorological Data Sources -->
-        <section class="saas-card" id="sources">
+        <section class="dashboard-section saas-card" id="sources">
           <div class="card-header-clean">
             <div class="card-title-group">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -1861,6 +2016,189 @@
                 </tbody>
               </table>
             </div>
+          </div>
+        </section>
+
+
+        <!-- Dedicated Page / Tab: Alert History -->
+        <section class="dashboard-section saas-card" id="alertHistorySection">
+          <div class="card-header-clean">
+            <div class="card-title-group">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 class="card-title">Weather Risk Alert History &amp; Notification Trail</h2>
+                <span class="badge-saas badge-critical" id="alertHistoryCountBadge">SQLite Persisted</span>
+              </div>
+              <span class="card-subtitle">Transparent rule-based heuristic alerts across 38 Tamil Nadu districts generated from actual NWP provider responses.</span>
+            </div>
+
+            <div class="card-actions-group">
+              <div class="segmented-control" id="alertSeverityFilterGroup" role="group" aria-label="Filter alerts by severity">
+                <button class="segmented-btn active" data-alert-filter="All">All Severities</button>
+                <button class="segmented-btn" data-alert-filter="Severe">Severe</button>
+                <button class="segmented-btn" data-alert-filter="High">High</button>
+                <button class="segmented-btn" data-alert-filter="Moderate">Moderate</button>
+                <button class="segmented-btn" data-alert-filter="Low">Low</button>
+              </div>
+              <button class="btn-saas btn-saas-secondary" id="exportAlertsCsvBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span>Export CSV</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 16px;">
+            <table class="saas-table" id="fullAlertHistoryTable">
+              <thead>
+                <tr>
+                  <th>Alert ID</th>
+                  <th>District</th>
+                  <th>Hazard Type</th>
+                  <th>Severity</th>
+                  <th>Trigger / Threshold</th>
+                  <th>Reason &amp; Meteorological Evidence</th>
+                  <th>Status</th>
+                  <th>Acknowledged</th>
+                  <th>Timestamp</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="fullAlertsHistoryBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Dedicated Page / Tab: Audit Trail -->
+        <section class="dashboard-section saas-card" id="auditHistorySection">
+          <div class="card-header-clean">
+            <div class="card-title-group">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 class="card-title">System &amp; Meteorological Configuration Audit Trail</h2>
+                <span class="badge-saas badge-normal">Persistent SQLite Log</span>
+              </div>
+              <span class="card-subtitle">Chronological record of operational threshold adjustments, data source toggles, and operator acknowledgements.</span>
+            </div>
+            <div class="card-actions-group">
+              <button class="btn-saas btn-saas-secondary" id="refreshAuditHistoryBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path><path d="M16 21h5v-5"></path></svg>
+                <span>Refresh Trail</span>
+              </button>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 16px;">
+            <table class="saas-table" id="fullAuditTable">
+              <thead>
+                <tr>
+                  <th>Event ID</th>
+                  <th>Action Type</th>
+                  <th>Target Entity</th>
+                  <th>Prior Value</th>
+                  <th>Applied Value</th>
+                  <th>Performed By</th>
+                  <th>Timestamp (UTC)</th>
+                  <th>Verification Notes</th>
+                </tr>
+              </thead>
+              <tbody id="fullAuditTableBody">
+                <!-- Rendered dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Dedicated Page / Tab: Meteorological Indicators Reference -->
+        <section class="dashboard-section saas-card" id="indicatorsRefSection">
+          <div class="card-header-clean">
+            <div class="card-title-group">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <h2 class="card-title">Meteorological Indicators Reference &amp; Threshold Rules</h2>
+                <span class="badge-saas badge-normal">Scientific Specification</span>
+              </div>
+              <span class="card-subtitle">Official mathematical definitions, provider source fields, units, and heuristic classification rules.</span>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto; margin-top: 16px;">
+            <table class="indicators-ref-table">
+              <thead>
+                <tr>
+                  <th>Indicator</th>
+                  <th>Formula / Formulation</th>
+                  <th>Source Fields</th>
+                  <th>Unit</th>
+                  <th>Threshold Rules &amp; Operational Severity</th>
+                  <th>Provider Attribution</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Apparent Temperature</strong></td>
+                  <td><span class="font-mono">T + 0.33·e - 0.70·v - 4.00</span></td>
+                  <td><span class="font-mono">temperature_2m, relative_humidity_2m, wind_speed_10m</span></td>
+                  <td>°C</td>
+                  <td>&lt;32°C Normal; 32–38°C Caution; 38–45°C High Risk; &gt;45°C Severe Danger</td>
+                  <td>Open-Meteo NWP assimilation</td>
+                </tr>
+                <tr>
+                  <td><strong>Rothfusz Heat Index</strong></td>
+                  <td><span class="font-mono">HI = c1 + c2·T + c3·RH + c4·T·RH + ...</span></td>
+                  <td><span class="font-mono">temperature_2m, relative_humidity_2m</span></td>
+                  <td>°C</td>
+                  <td>&lt;32°C Safe; 32–41°C Heat Stress Caution; 41–54°C Danger; &gt;54°C Extreme Hazard</td>
+                  <td>NOAA / Steadman formulation</td>
+                </tr>
+                <tr>
+                  <td><strong>Precipitation Accumulation</strong></td>
+                  <td><span class="font-mono">&Sigma; precip(t) over 6h, 24h, 48h, 72h</span></td>
+                  <td><span class="font-mono">precipitation, precipitation_probability</span></td>
+                  <td>mm</td>
+                  <td>&gt;64.5 mm/24h Heavy Rain (Orange); &gt;115.5 mm Very Heavy; &gt;204.4 mm Extremely Heavy (Red)</td>
+                  <td>IMD Rainfall classification standard</td>
+                </tr>
+                <tr>
+                  <td><strong>Dew Point Spread</strong></td>
+                  <td><span class="font-mono">&Delta;Td = T - Td &approx; (100 - RH) / 5</span></td>
+                  <td><span class="font-mono">temperature_2m, dew_point_2m</span></td>
+                  <td>°C</td>
+                  <td>&lt;2.5°C Saturation/Fog hazard; 2.5–5.0°C High humidity; &gt;10°C Dry air</td>
+                  <td>Surface thermodynamics standard</td>
+                </tr>
+                <tr>
+                  <td><strong>Pressure Tendency (&Delta;P3h)</strong></td>
+                  <td><span class="font-mono">P(t) - P(t - 3h)</span></td>
+                  <td><span class="font-mono">surface_pressure, pressure_msl</span></td>
+                  <td>hPa / 3h</td>
+                  <td>&le; -2.0 hPa Rapid Fall (Barometric deepening); &plusmn;1.0 hPa Steady; &ge; +2.0 hPa Rising</td>
+                  <td>WMO Synoptic code 0200</td>
+                </tr>
+                <tr>
+                  <td><strong>Wind Exposure Index</strong></td>
+                  <td><span class="font-mono">v_gust &gt; 1.35·v_sustained + coastal_factor</span></td>
+                  <td><span class="font-mono">wind_speed_10m, wind_gusts_10m</span></td>
+                  <td>km/h</td>
+                  <td>&gt;40 km/h Moderate Gale; &gt;62 km/h High Wind Warning; &gt;88 km/h Violent Storm</td>
+                  <td>IMD Cyclone warning criteria</td>
+                </tr>
+                <tr>
+                  <td><strong>Monsoon Anomaly vs 30y LPA</strong></td>
+                  <td><span class="font-mono">((Actual - Normal) / Normal) &times; 100%</span></td>
+                  <td><span class="font-mono">precipitation_sum vs 1991–2020 IMD normal</span></td>
+                  <td>%</td>
+                  <td>-19% to +19% Normal; +20% to +59% Excess; &gt;+60% Large Excess; -20% to -59% Deficit</td>
+                  <td>IMD Long Period Average (LPA)</td>
+                </tr>
+                <tr>
+                  <td><strong>Dry-Spell Run Length</strong></td>
+                  <td><span class="font-mono">Consecutive days with daily rain &lt; 2.5 mm</span></td>
+                  <td><span class="font-mono">precipitation_sum</span></td>
+                  <td>days</td>
+                  <td>&gt;7 days Emerging dry spell; &gt;14 days Agricultural moisture stress; &gt;21 days Severe drought risk</td>
+                  <td>Agro-meteorological run-length</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </section>
 

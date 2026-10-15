@@ -119,6 +119,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     initPhase4MLEvaluation();
     initPhase5RiskIntelligence();
     initOperationalIntelligence();
+    loadOpsActiveAlertsPreview(currentDistrictId);
+    loadOpsAuditPreview();
+    const initialHash = window.location.hash.replace(/^#/, "").split("?")[0] || "overview";
+    switchOperationsView(initialHash);
   } catch (err) {
     console.error("Initialization error:", err);
     showToast("Error loading initial meteorological data.", "critical");
@@ -505,7 +509,9 @@ async function loadDistrictDashboard(districtId) {
     loadPhase4MLEvaluation(districtId),
     loadPhase5RiskData(districtId),
     fetchComputedGuidance(districtId, currentGuidanceHorizon),
-    fetchSectorMatrix(districtId, currentSectorFilter, currentSectorHorizon, currentSectorSort)
+    fetchSectorMatrix(districtId, currentSectorFilter, currentSectorHorizon, currentSectorSort),
+    loadOpsActiveAlertsPreview(districtId),
+    loadOpsAuditPreview()
   ]).catch(err => console.error("Error loading dashboard data:", err));
 }
 
@@ -571,47 +577,53 @@ function renderCurrentWeather(data) {
 
   // Today's Summary
   const today = data.today_summary || {};
-  document.getElementById("todayMaxTemp").textContent = (today.temp_max ?? (t + 2.5)).toFixed(1);
-  document.getElementById("todayMinTemp").textContent = (today.temp_min ?? (t - 4.0)).toFixed(1);
-  document.getElementById("todayExpectedRain").textContent = (today.expected_rain_mm ?? 0).toFixed(1);
-  document.getElementById("todayRainProb").textContent = today.rain_probability ?? 20;
+  document.getElementById("todayMaxTemp").textContent = today.temp_max != null ? Number(today.temp_max).toFixed(1) : "—";
+  document.getElementById("todayMinTemp").textContent = today.temp_min != null ? Number(today.temp_min).toFixed(1) : "—";
+  document.getElementById("todayExpectedRain").textContent = today.expected_rain_mm != null ? Number(today.expected_rain_mm).toFixed(1) : "—";
+  document.getElementById("todayRainProb").textContent = today.rain_probability != null ? today.rain_probability : "—";
   document.getElementById("todaySunrise").textContent = today.sunrise || "06:04 AM";
   document.getElementById("todaySunset").textContent = today.sunset || "06:08 PM";
 
-  // 6 KPI Cards
-  document.getElementById("kpiTemp").textContent = t.toFixed(1);
-  document.getElementById("kpiTempRange").textContent = `Diurnal: ${(today.temp_min ?? (t-4)).toFixed(0)}° / ${(today.temp_max ?? (t+2)).toFixed(0)}°C`;
-  const tempPct = Math.min(100, Math.max(0, ((t - 15) / 30) * 100));
+  // 6 KPI Cards with Missing Values Explicitly Handled
+  document.getElementById("kpiTemp").textContent = t != null ? Number(t).toFixed(1) : "N/A - Not Reported";
+  document.getElementById("kpiTempRange").textContent = (today.temp_min != null && today.temp_max != null)
+    ? `Diurnal: ${Number(today.temp_min).toFixed(0)}° / ${Number(today.temp_max).toFixed(0)}°C`
+    : `Diurnal: — / — °C`;
+  const tempPct = t != null ? Math.min(100, Math.max(0, ((t - 15) / 30) * 100)) : 0;
   document.getElementById("tempBarFill").style.width = `${tempPct}%`;
 
-  const rh = Math.round(data.relative_humidity_2m);
-  document.getElementById("currentHumidity").textContent = rh;
-  document.getElementById("humidityBarFill").style.width = `${rh}%`;
-  const dewpoint = t - ((100 - rh) / 5);
-  document.getElementById("dewpointFooter").textContent = `Dewpoint: ${dewpoint.toFixed(1)} °C`;
+  const rh = data.relative_humidity_2m != null ? Math.round(data.relative_humidity_2m) : null;
+  document.getElementById("currentHumidity").textContent = rh != null ? rh : "N/A - Not Reported";
+  document.getElementById("humidityBarFill").style.width = `${rh ?? 0}%`;
+  const dewpoint = (t != null && rh != null) ? t - ((100 - rh) / 5) : null;
+  document.getElementById("dewpointFooter").textContent = dewpoint != null ? `Dewpoint: ${dewpoint.toFixed(1)} °C` : "Dewpoint: N/A - Not Reported";
 
   const rain = data.precipitation_mm;
-  document.getElementById("currentPrecip").textContent = rain.toFixed(1);
-  document.getElementById("rainBarFill").style.width = `${Math.min(100, (rain / 50) * 100)}%`;
-  document.getElementById("cloudCoverFooter").textContent = `Cloud Cover: ${Math.round(data.cloud_cover || 20)}%`;
+  document.getElementById("currentPrecip").textContent = rain != null ? Number(rain).toFixed(1) : "N/A - Not Reported";
+  document.getElementById("rainBarFill").style.width = `${rain != null ? Math.min(100, (rain / 50) * 100) : 0}%`;
+  document.getElementById("cloudCoverFooter").textContent = data.cloud_cover != null ? `Cloud Cover: ${Math.round(data.cloud_cover)}%` : "Cloud Cover: N/A - Not Reported";
 
   const wind = data.wind_speed_10m;
-  document.getElementById("currentWind").textContent = wind.toFixed(1);
-  document.getElementById("windBarFill").style.width = `${Math.min(100, (wind / 50) * 100)}%`;
-  document.getElementById("windDirFooter").textContent = `Vector: ${Math.round(data.wind_direction_10m || 80)}° · Gusts: ${(data.wind_gusts_10m || wind * 1.3).toFixed(1)} km/h`;
+  document.getElementById("currentWind").textContent = wind != null ? Number(wind).toFixed(1) : "N/A - Not Reported";
+  document.getElementById("windBarFill").style.width = `${wind != null ? Math.min(100, (wind / 50) * 100) : 0}%`;
+  document.getElementById("windDirFooter").textContent = (data.wind_direction_10m != null)
+    ? `Vector: ${Math.round(data.wind_direction_10m)}° · Gusts: ${(data.wind_gusts_10m != null ? Number(data.wind_gusts_10m).toFixed(1) : '—')} km/h`
+    : "Vector: N/A - Not Reported";
 
   const pressure = data.pressure_msl;
-  document.getElementById("currentPressure").textContent = pressure.toFixed(1);
-  document.getElementById("pressureTrend").textContent = pressure < 1008 ? "Low isobaric trough" : "Stable sea-level isobar";
+  document.getElementById("currentPressure").textContent = pressure != null ? Number(pressure).toFixed(1) : "N/A - Not Reported";
+  document.getElementById("pressureTrend").textContent = pressure != null ? (pressure < 1008 ? "Low isobaric trough" : "Stable sea-level isobar") : "Pressure: N/A - Not Reported";
 
-  const uv = data.uv_index || 0.0;
-  document.getElementById("currentUv").textContent = uv.toFixed(1);
-  document.getElementById("uvBarFill").style.width = `${Math.min(100, (uv / 12) * 100)}%`;
+  const uv = data.uv_index;
+  document.getElementById("currentUv").textContent = uv != null ? Number(uv).toFixed(1) : "N/A - Not Reported";
+  document.getElementById("uvBarFill").style.width = `${uv != null ? Math.min(100, (uv / 12) * 100) : 0}%`;
   let uvDesc = "Low Risk";
-  if (uv >= 8) uvDesc = "Very High UV Hazard";
-  else if (uv >= 6) uvDesc = "High UV Exposure";
-  else if (uv >= 3) uvDesc = "Moderate Exposure Risk";
-  document.getElementById("uvExposureFooter").textContent = uvDesc;
+  if (uv != null) {
+    if (uv >= 8) uvDesc = "Very High UV Hazard";
+    else if (uv >= 6) uvDesc = "High UV Exposure";
+    else if (uv >= 3) uvDesc = "Moderate Exposure Risk";
+  }
+  document.getElementById("uvExposureFooter").textContent = uv != null ? uvDesc : "UV: N/A - Not Reported";
 }
 
 // ==============================================================================
@@ -1087,6 +1099,13 @@ function getSaaSVariableColor(val, variable) {
     if (val >= 65) return "#38bdf8";
     if (val >= 50) return "#84cc16";
     return "#f59e0b";
+  } else if (variable === "rain_probability") {
+    if (val >= 80) return "#1e3a8a";
+    if (val >= 60) return "#2563eb";
+    if (val >= 40) return "#0284c7";
+    if (val >= 20) return "#38bdf8";
+    if (val > 0) return "#bae6fd";
+    return "#e2e8f0";
   } else { // wind
     if (val >= 40.0) return "#b91c1c";
     if (val >= 25.0) return "#d97706";
@@ -3223,6 +3242,7 @@ async function fetchSectorMatrix(districtId, sectorFilter = "all", horizon = 24,
 }
 
 function renderSectorMatrix(data, sectorFilter, sortKey) {
+  if (data && data.sectors) renderFourSectorSummaries(data.sectors);
   const tbody = document.getElementById("sectorMatrixTableBody");
   if (!tbody || !data || !data.sectors) return;
 
@@ -3498,3 +3518,391 @@ function renderOperationalAuditLog(entries) {
   });
 }
 
+
+
+// ==============================================================================
+// Operational Console Interface & View Switching Controller
+// ==============================================================================
+let districtAbortController = null;
+
+function switchOperationsView(targetSectionId) {
+  if (!targetSectionId) return;
+  const cleanId = targetSectionId.replace(/^#/, "");
+
+  const allSections = document.querySelectorAll(".dashboard-section");
+  let found = false;
+  allSections.forEach(sec => {
+    if (sec.id === cleanId) {
+      sec.classList.add("active-section");
+      found = true;
+    } else {
+      sec.classList.remove("active-section");
+    }
+  });
+
+  if (!found) {
+    const overviewSec = document.getElementById("overview");
+    if (overviewSec) overviewSec.classList.add("active-section");
+  }
+
+  // Update navigation items
+  document.querySelectorAll("[data-nav-target]").forEach(el => {
+    const target = el.getAttribute("data-nav-target");
+    if (target === cleanId) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
+  });
+
+  // Re-size Leaflet map when switching to map-containing sections
+  if (cleanId === "mapSection" || cleanId === "overview") {
+    setTimeout(() => {
+      if (leafletMap) leafletMap.invalidateSize();
+    }, 150);
+  }
+
+  // Sync Hash in URL
+  try {
+    const q = currentDistrictId ? `?district=${currentDistrictId}` : "";
+    history.replaceState(null, "", `#${cleanId}${q}`);
+  } catch (_) {}
+
+  // Scroll to top of operational dashboard
+  window.scrollTo({ top: 0, behavior: "smooth" });
+
+  // If entering alert history or audit history, refresh their tables
+  if (cleanId === "alertHistorySection") {
+    loadFullAlertsHistory("All");
+  } else if (cleanId === "auditHistorySection") {
+    loadFullAuditTable();
+  }
+}
+
+window.switchOperationsView = switchOperationsView;
+
+function clearStaleIndicators() {
+  const elList = [
+    "currentTemp", "todayMaxTemp", "todayMinTemp", "todayExpectedRain", "todayRainProb",
+    "kpiTemp", "currentHumidity", "currentPrecip", "currentWind", "currentPressure", "currentUv"
+  ];
+  elList.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = "—";
+  });
+  const condText = document.getElementById("currentConditionText");
+  if (condText) condText.textContent = "Synchronizing...";
+  const appTRow = document.getElementById("apparentTempRow");
+  if (appTRow) appTRow.textContent = "Feels like — °C";
+}
+
+async function loadOpsActiveAlertsPreview(districtId) {
+  const container = document.getElementById("opsActiveAlertsList");
+  const countBadge = document.getElementById("opsAlertsCountBadge");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/risk/alerts?limit=10`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const alerts = await res.json();
+
+    const active = alerts.filter(a => a.status === "Active" || !a.is_acknowledged);
+    const districtAlerts = active.filter(a => a.district_id === districtId);
+    const displayAlerts = districtAlerts.length > 0 ? districtAlerts : active.slice(0, 4);
+
+    if (countBadge) {
+      countBadge.textContent = `${active.length} Active Statewide`;
+      countBadge.className = `badge-saas ${active.length > 0 ? 'badge-critical' : 'badge-normal'}`;
+    }
+
+    if (!displayAlerts || displayAlerts.length === 0) {
+      container.innerHTML = `
+        <div style="padding: 24px 16px; text-align: center; color: var(--color-text-secondary); background: var(--color-surface-muted); border-radius: var(--radius-sm); border: 1px dashed var(--color-border);">
+          <div style="font-weight: 600; color: var(--color-forest); margin-bottom: 4px;">Normal Meteorological Envelope</div>
+          <div style="font-size: 0.78rem;">No active extreme heat, heavy precipitation, or gale alerts for ${districtId.toUpperCase()}. Heuristic thresholds verified against NWP telemetry.</div>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = displayAlerts.map(a => {
+      const sevClass = (a.severity || "moderate").toLowerCase();
+      const badgeCls = sevClass === "severe" ? "badge-critical" : (sevClass === "high" ? "badge-advisory" : "badge-normal");
+      return `
+        <div class="risk-notification-item ${sevClass}">
+          <div class="risk-notification-content">
+            <div class="risk-notification-title">
+              <span>${a.hazard_type || 'Weather Risk'} · <strong>${(a.district_id || districtId).toUpperCase()}</strong></span>
+              <span class="badge-saas ${badgeCls}">${a.severity || 'Moderate'}</span>
+            </div>
+            <div class="risk-notification-meta">
+              ${a.reason || 'Heuristic threshold breached based on live numerical weather forecast.'}
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+              <span class="risk-notification-trigger">
+                Measured: <strong>${a.trigger_value ?? '—'} ${a.unit || ''}</strong> (Threshold: ${a.threshold_value ?? '—'} ${a.unit || ''})
+              </span>
+              <span class="font-mono" style="font-size: 0.72rem; color: var(--color-text-muted);">
+                Lead: ${a.lead_time_hours || 24}h
+              </span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    container.innerHTML = `<div style="padding: 16px; font-size: 0.8rem; color: var(--color-text-muted);">Alert feeds synchronizing...</div>`;
+  }
+}
+
+async function loadOpsAuditPreview() {
+  const container = document.getElementById("opsAuditPreviewList");
+  if (!container) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/audit?limit=5`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const entries = await res.json();
+
+    if (!entries || entries.length === 0) {
+      container.innerHTML = `<div style="padding: 16px; text-align: center; color: var(--color-text-muted); font-size: 0.8rem;">No audit records found.</div>`;
+      return;
+    }
+
+    container.innerHTML = entries.slice(0, 5).map(e => {
+      const timeStr = e.timestamp ? new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--';
+      return `
+        <div class="audit-preview-item">
+          <div>
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+              <span class="badge-saas badge-normal font-mono" style="font-size: 0.68rem; padding: 1px 5px;">${e.action}</span>
+              <span style="font-weight: 600; font-size: 0.78rem; color: var(--color-text);">${e.target}</span>
+            </div>
+            <div style="font-size: 0.74rem; color: var(--color-text-secondary);">${e.notes || 'Config updated by ' + e.performed_by}</div>
+          </div>
+          <span class="font-mono" style="font-size: 0.72rem; color: var(--color-text-muted); white-space: nowrap;">${timeStr}</span>
+        </div>
+      `;
+    }).join("");
+
+  } catch (err) {
+    container.innerHTML = `<div style="padding: 14px; font-size: 0.78rem; color: var(--color-text-muted);">Audit sync idle</div>`;
+  }
+}
+
+function renderFourSectorSummaries(sectorsData) {
+  const targets = ["opsFourSectorsGrid", "sectorsFourCardsContainer"];
+  if (!sectorsData) return;
+
+  const keySectors = [
+    { key: "agriculture", label: "Agriculture & Crops", icon: "🌱" },
+    { key: "transport_and_logistics", label: "Transport & Logistics", icon: "🚛" },
+    { key: "urban_infrastructure", label: "Urban Infrastructure", icon: "🏙️" },
+    { key: "water_resources", label: "Water Resources", icon: "💧" }
+  ];
+
+  const html = keySectors.map(ks => {
+    const s = sectorsData[ks.key] || {
+      sector_name: ks.label,
+      severity: "Low",
+      composite_score: 1.2,
+      hazard_likelihood: 1.0,
+      exposure_score: 1.0,
+      vulnerability_score: 1.2,
+      operational_guideline: "Standard operations in normal climatological threshold."
+    };
+
+    const sevClass = (s.severity || "Low").toLowerCase();
+    const badgeColor = sevClass === "severe" ? "background:#fef2f2; color:#b91c1c; border:1px solid #fecaca;" :
+      (sevClass === "high" ? "background:#fffaf0; color:#ea580c; border:1px solid #fed7aa;" :
+      (sevClass === "moderate" ? "background:#fffdf5; color:#d97706; border:1px solid #fde68a;" :
+      "background:#f0fdf4; color:#166534; border:1px solid #bbf7d0;"));
+
+    return `
+      <div class="ops-sector-card">
+        <div>
+          <div class="ops-sector-header">
+            <span class="ops-sector-title">${s.sector_name || ks.label}</span>
+            <span class="ops-sector-score" style="${badgeColor}">
+              Score: ${s.composite_score ? s.composite_score.toFixed(1) : '1.0'} (${s.severity || 'Low'})
+            </span>
+          </div>
+          <div class="ops-sector-metrics">
+            <span>H: <strong>${s.hazard_likelihood ? s.hazard_likelihood.toFixed(1) : '1.0'}</strong></span>
+            <span>E: <strong>${s.exposure_score ? s.exposure_score.toFixed(1) : '1.0'}</strong></span>
+            <span>V: <strong>${s.vulnerability_score ? s.vulnerability_score.toFixed(1) : '1.0'}</strong></span>
+          </div>
+        </div>
+        <p class="ops-sector-advisory">${s.operational_guideline || 'Normal conditions.'}</p>
+      </div>
+    `;
+  }).join("");
+
+  targets.forEach(tId => {
+    const el = document.getElementById(tId);
+    if (el) el.innerHTML = html;
+  });
+}
+
+async function loadFullAlertsHistory(severityFilter = "All") {
+  const tbody = document.getElementById("fullAlertsHistoryBody");
+  const countBadge = document.getElementById("alertHistoryCountBadge");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/risk/alerts?limit=50`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const alerts = await res.json();
+
+    let filtered = alerts;
+    if (severityFilter && severityFilter !== "All") {
+      filtered = alerts.filter(a => (a.severity || "").toLowerCase() === severityFilter.toLowerCase());
+    }
+
+    if (countBadge) {
+      countBadge.textContent = `${filtered.length} Recorded`;
+    }
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--color-text-muted); padding: 20px;">No alerts matching "${severityFilter}" found in SQLite persistence.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(a => {
+      const sevClass = (a.severity || "moderate").toLowerCase();
+      const badgeCls = sevClass === "severe" ? "badge-critical" : (sevClass === "high" ? "badge-advisory" : "badge-normal");
+      const dateStr = a.updated_at ? new Date(a.updated_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '--';
+      return `
+        <tr>
+          <td><span class="font-mono" style="font-size: 0.74rem; font-weight: 600;">${a.alert_id}</span></td>
+          <td><strong>${(a.district_id || "").toUpperCase()}</strong></td>
+          <td>${a.hazard_type}</td>
+          <td><span class="badge-saas ${badgeCls}">${a.severity}</span></td>
+          <td><span class="font-mono" style="font-size: 0.74rem;">${a.trigger_value} / ${a.threshold_value} ${a.unit || ''}</span></td>
+          <td style="max-width: 240px; font-size: 0.76rem; color: var(--color-text-secondary);">${a.reason}</td>
+          <td><span class="badge-saas ${a.status === 'Active' ? 'badge-critical' : 'badge-normal'}">${a.status}</span></td>
+          <td>
+            <span style="font-size: 0.75rem; color: ${a.is_acknowledged ? 'var(--color-forest)' : 'var(--color-warning)'}; font-weight: 600;">
+              ${a.is_acknowledged ? 'Yes' : 'Pending'}
+            </span>
+          </td>
+          <td style="font-size: 0.72rem; color: var(--color-text-muted);">${dateStr}</td>
+          <td>
+            ${!a.is_acknowledged ? `
+              <button class="btn-saas btn-saas-secondary btn-saas-sm" onclick="ackAlertItem('${a.alert_id}')">Acknowledge</button>
+            ` : '<span style="color: var(--color-text-muted); font-size: 0.75rem;">Done</span>'}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="10" style="color: var(--color-critical); padding: 16px;">Error loading alert records: ${err.message}</td></tr>`;
+  }
+}
+
+window.ackAlertItem = async function(alertId) {
+  try {
+    const res = await fetch(`${API_BASE}/api/risk/alerts/${alertId}/ack`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ acknowledged_by: "Operations Staff" })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    showToast(`Alert ${alertId} acknowledged.`, "success");
+    loadFullAlertsHistory();
+    loadOpsActiveAlertsPreview(currentDistrictId);
+  } catch (err) {
+    showToast(`Failed to acknowledge alert: ${err.message}`, "critical");
+  }
+};
+
+async function loadFullAuditTable() {
+  const tbody = document.getElementById("fullAuditTableBody");
+  if (!tbody) return;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/settings/audit?limit=50`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const entries = await res.json();
+
+    if (!entries || entries.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--color-text-muted); padding: 18px;">No audit events recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = entries.map(e => {
+      const dateFormatted = e.timestamp ? new Date(e.timestamp).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : '--';
+      return `
+        <tr>
+          <td><span class="font-mono" style="font-size: 0.74rem;">#${e.id}</span></td>
+          <td><span class="badge-saas badge-normal font-mono" style="font-size: 0.72rem;">${e.action}</span></td>
+          <td><code class="font-mono" style="font-size: 0.74rem;">${e.target}</code></td>
+          <td><span class="font-mono" style="font-size: 0.74rem; color: var(--color-text-muted);">${e.old_value ?? '--'}</span></td>
+          <td><span class="font-mono" style="font-weight: 600; font-size: 0.74rem; color: var(--color-primary);">${e.new_value ?? '--'}</span></td>
+          <td><span style="font-size: 0.74rem; font-weight: 500;">${e.performed_by}</span></td>
+          <td style="font-size: 0.72rem; color: var(--color-text-muted);">${dateFormatted}</td>
+          <td style="font-size: 0.74rem; color: var(--color-text-secondary);">${e.notes || ''}</td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="8" style="color: var(--color-critical); padding: 16px;">Error loading audit log: ${err.message}</td></tr>`;
+  }
+}
+
+// Global Nav Listeners
+document.addEventListener("click", (e) => {
+  const navBtn = e.target.closest("[data-nav-target]");
+  if (navBtn) {
+    const target = navBtn.getAttribute("data-nav-target");
+    if (target) {
+      e.preventDefault();
+      switchOperationsView(target);
+      const appShell = document.getElementById("appShell");
+      if (appShell) appShell.classList.remove("sidebar-mobile-open");
+    }
+  }
+
+  // Quick Map Variable Buttons
+  const mapVarBtn = e.target.closest("[data-set-map-var]");
+  if (mapVarBtn) {
+    const v = mapVarBtn.getAttribute("data-set-map-var");
+    if (v) {
+      currentMapVariable = v;
+      document.querySelectorAll("#mapVarPills .segmented-btn").forEach(b => {
+        b.classList.toggle("active", b.getAttribute("data-variable") === v);
+      });
+      loadMapWeatherData(v);
+    }
+  }
+});
+
+// Severity filter clicks
+document.addEventListener("click", (e) => {
+  const filterBtn = e.target.closest("#alertSeverityFilterGroup .segmented-btn");
+  if (filterBtn) {
+    document.querySelectorAll("#alertSeverityFilterGroup .segmented-btn").forEach(b => b.classList.remove("active"));
+    filterBtn.classList.add("active");
+    loadFullAlertsHistory(filterBtn.getAttribute("data-alert-filter"));
+  }
+});
+
+// Export alerts CSV button
+const exportAlertsCsvBtn = document.getElementById("exportAlertsCsvBtn");
+if (exportAlertsCsvBtn) {
+  exportAlertsCsvBtn.addEventListener("click", () => {
+    window.location.href = `${API_BASE}/api/risk/alerts/export`;
+  });
+}
+
+// Refresh audit history button
+const refreshAuditBtn = document.getElementById("refreshAuditHistoryBtn");
+if (refreshAuditBtn) {
+  refreshAuditBtn.addEventListener("click", () => {
+    loadFullAuditTable();
+    showToast("Audit trail refreshed from SQLite.");
+  });
+}

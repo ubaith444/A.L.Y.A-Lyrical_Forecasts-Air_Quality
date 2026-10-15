@@ -136,6 +136,7 @@ def health_check():
             "datasets_dir": get_datasets_dir()
         },
         "districts_monitored": len(TAMIL_NADU_DISTRICTS),
+        "districts_loaded": len(TAMIL_NADU_DISTRICTS),
         "monitoring_stations": len(CORE_MONITORING_LOCATIONS),
         "ml_model_loaded": predictor.clf_rain is not None
     }
@@ -503,11 +504,12 @@ def compare_multiple_districts(
 
 @app.get("/api/map/weather")
 def get_map_weather_layers(
-    variable: str = Query(default="temperature", regex="^(temperature|rainfall|humidity|wind)$")
+    variable: str = Query(default="temperature", regex="^(temperature|rainfall|humidity|wind|rain_probability)$")
 ):
     """
     Phase 2 API: District choropleth layer values for all 38 Tamil Nadu districts.
     Returns value, color thresholds, and bounds for Leaflet rendering.
+    Supports temperature, rainfall, humidity, wind, and rain_probability.
     Results are cached for 15 minutes.
     """
     cache_key = f"map_layer_{variable}"
@@ -519,7 +521,8 @@ def get_map_weather_layers(
         "temperature": "°C",
         "rainfall": "mm",
         "humidity": "%",
-        "wind": "km/h"
+        "wind": "km/h",
+        "rain_probability": "%"
     }
 
     results = {}
@@ -534,7 +537,19 @@ def get_map_weather_layers(
                 val = live.get("precipitation_mm", 0.0)
             elif variable == "humidity":
                 val = live.get("relative_humidity_2m", 65.0)
-            else: # wind
+            elif variable == "wind":
+                val = live.get("wind_speed_10m", 12.0)
+            elif variable == "rain_probability":
+                val = live.get("precipitation_probability", live.get("rain_probability"))
+                if val is None:
+                    precip = float(live.get("precipitation_mm", 0.0))
+                    rh = float(live.get("relative_humidity_2m", 65.0))
+                    cloud = float(live.get("cloud_cover", 20.0))
+                    if precip > 0:
+                        val = min(100.0, max(75.0, round(70.0 + precip * 5.0, 1)))
+                    else:
+                        val = min(95.0, max(5.0, round((rh - 40.0) * 1.2 + (cloud * 0.4), 1)))
+            else:
                 val = live.get("wind_speed_10m", 12.0)
         except Exception:
             # Fallback estimation based on elevation and zone
@@ -544,6 +559,8 @@ def get_map_weather_layers(
                 val = 0.0
             elif variable == "humidity":
                 val = 80.0 if d_info["is_coastal"] else 60.0
+            elif variable == "rain_probability":
+                val = 25.0 if d_info["is_coastal"] else 15.0
             else:
                 val = 14.0 if d_info["is_coastal"] else 9.0
 
@@ -1190,6 +1207,30 @@ if os.path.exists(frontend_dir):
 
     @app.get("/")
     def serve_index():
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
+
+    @app.get("/data-sources")
+    @app.get("/data-sources.html")
+    def serve_data_sources():
+        ds_file = os.path.join(frontend_dir, "data-sources.html")
+        if os.path.exists(ds_file):
+            return FileResponse(ds_file)
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
+
+    @app.get("/alert-history")
+    @app.get("/alert-history.html")
+    def serve_alert_history():
+        ah_file = os.path.join(frontend_dir, "alert-history.html")
+        if os.path.exists(ah_file):
+            return FileResponse(ah_file)
+        return FileResponse(os.path.join(frontend_dir, "index.html"))
+
+    @app.get("/audit-history")
+    @app.get("/audit-history.html")
+    def serve_audit_history():
+        aud_file = os.path.join(frontend_dir, "audit-history.html")
+        if os.path.exists(aud_file):
+            return FileResponse(aud_file)
         return FileResponse(os.path.join(frontend_dir, "index.html"))
 
     @app.get("/style.css")

@@ -1,5 +1,5 @@
 {
-  "experiment_id": "EXP_TN_24H_20261014_230543",
+  "experiment_id": "EXP_TN_24H_20261015_105607",
   "name": "Tamil Nadu 24h Weather Forecast Benchmark",
   "horizon_hours": 24,
   "train_samples": 8096,
@@ -56,9 +56,9 @@
     "timesfm": {
       "temp_mae": 0.613,
       "temp_rmse": 0.799,
-      "rain_mae": 3.749,
-      "rain_wet_mae": 7.131,
-      "f1_score": 0.497
+      "rain_mae": 3.695,
+      "rain_wet_mae": 7.02,
+      "f1_score": 0.4854
     }
   },
   "best_model": "lightgbm",
@@ -215,7 +215,7 @@
         "event_precision": 0.13,
         "false_alarm_rate": 0.87
       },
-      "latency_ms": 0.018,
+      "latency_ms": 0.014,
       "memory_mb": 14.8,
       "failure_rate_pct": 0.0
     },
@@ -228,31 +228,31 @@
         "r2": 0.968
       },
       "rainfall": {
-        "mae": 5.805,
-        "rmse": 11.749,
-        "mbe": -1.596,
-        "r2": 0.029,
-        "wet_day_mae": 9.644,
-        "wet_day_rmse": 16.396,
+        "mae": 5.798,
+        "rmse": 11.767,
+        "mbe": -1.62,
+        "r2": 0.026,
+        "wet_day_mae": 9.664,
+        "wet_day_rmse": 16.45,
         "wet_days_count": 816
       },
       "rain_classification": {
         "accuracy": 0.676,
-        "precision": 0.7337,
-        "recall": 0.4828,
-        "f1_score": 0.5824,
-        "roc_auc": 0.7081,
-        "pr_auc": 0.6787
+        "precision": 0.74,
+        "recall": 0.4743,
+        "f1_score": 0.578,
+        "roc_auc": 0.717,
+        "pr_auc": 0.6853
       },
       "heavy_rain_event": {
         "heavy_threshold_mm": 35.5,
-        "true_positives": 5,
-        "false_positives": 9,
-        "false_negatives": 33,
-        "true_negatives": 1697,
-        "event_recall": 0.132,
-        "event_precision": 0.357,
-        "false_alarm_rate": 0.643
+        "true_positives": 6,
+        "false_positives": 10,
+        "false_negatives": 32,
+        "true_negatives": 1696,
+        "event_recall": 0.158,
+        "event_precision": 0.375,
+        "false_alarm_rate": 0.625
       },
       "latency_ms": 142.0,
       "memory_mb": 840.0,
@@ -324,5 +324,5 @@
     }
   },
   "artifact_path": "D:\\Climate & Forecast\\backend\\models\\saved_models\\champion_model_24h.joblib",
-  "created_at": "2026-10-14T23:05:43.843035"
+  "created_at": "2026-10-15T10:56:07.309814"
 }
