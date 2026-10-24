@@ -1,0 +1,94 @@
+@import "leaflet/dist/leaflet.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-canvas: #FAFAF7;
+  --color-surface: #FFFFFF;
+  --color-surface-subtle: #F4F2EB;
+  --color-text-primary: #25313B;
+  --color-text-secondary: #687580;
+  --color-text-muted: #94A3B8;
+  --color-border-subtle: #E5E8E8;
+  --color-border-strong: #CBD5E1;
+  --color-brand-aqua: #3CD7D0;
+  --color-brand-aqua-light: #E6FAF9;
+  --color-brand-deep-teal: #0A5C59;
+  --color-brand-sky: #0284C7;
+  --color-brand-mist: #B9D1E5;
+  --color-brand-peach: #F5D8C8;
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    color-scheme: light;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-height: 100vh;
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    overflow-x: hidden;
+  }
+
+  /* Force tabular numbers for clean alignment in metrics, timestamps, and charts */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Atmospheric Ambient Wash Animations (Subtle & Restrained) */
+.atmospheric-morning {
+  background: radial-gradient(circle at 10% 20%, rgba(245, 216, 200, 0.22) 0%, rgba(60, 215, 208, 0.08) 35%, rgba(250, 250, 247, 0) 65%);
+}
+
+.atmospheric-day {
+  background: radial-gradient(circle at 85% 15%, rgba(60, 215, 208, 0.15) 0%, rgba(220, 234, 244, 0.35) 40%, rgba(250, 250, 247, 0) 70%);
+}
+
+.atmospheric-evening {
+  background: radial-gradient(circle at 50% 10%, rgba(229, 220, 239, 0.25) 0%, rgba(245, 216, 200, 0.15) 30%, rgba(60, 215, 208, 0.06) 55%, rgba(250, 250, 247, 0) 75%);
+}
+
+.atmospheric-night {
+  background: radial-gradient(circle at 80% 20%, rgba(226, 232, 240, 0.35) 0%, rgba(250, 250, 247, 0) 60%);
+}
+
+.atmospheric-rain {
+  background: radial-gradient(circle at 50% 0%, rgba(185, 209, 229, 0.30) 0%, rgba(250, 250, 247, 0) 65%);
+}
+
+/* Custom Scrollbar for Forecast Scrubber */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 5px;
+  width: 5px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #E2E8F0;
+  border-radius: 9999px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #CBD5E1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
